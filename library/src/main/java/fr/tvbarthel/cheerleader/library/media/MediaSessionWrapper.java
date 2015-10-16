@@ -16,6 +16,7 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import fr.tvbarthel.cheerleader.library.client.SoundCloudTrack;
 import fr.tvbarthel.cheerleader.library.remote.RemoteControlClientCompat;
@@ -322,6 +323,43 @@ public class MediaSessionWrapper {
         public void onSkipToPrevious() {
             super.onSkipToPrevious();
             mCallback.onSkipToPrevious();
+        }
+
+        @Override
+        public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+            String intentAction = mediaButtonEvent.getAction();
+            if (!Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
+                // intent wasn't a MEDIA BUTTON event.
+                return false;
+            }
+
+            KeyEvent event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            int keycode = event.getKeyCode();
+            int action = event.getAction();
+
+            // Switch on keycode and fire action only on KeyDown event.
+            switch (keycode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY:
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                case KeyEvent.KEYCODE_HEADSETHOOK:
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        mCallback.onPlayPauseToggle();
+                    }
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_NEXT:
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        mCallback.onSkipToNext();
+                    }
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        mCallback.onSkipToPrevious();
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return super.onMediaButtonEvent(mediaButtonEvent);
         }
     }
 
